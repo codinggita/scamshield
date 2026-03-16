@@ -4,6 +4,7 @@ import ScamCard from '../components/ScamCard';
 import Pagination from '../components/Pagination';
 import { Search, Filter, ShieldAlert, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { fakeScams } from '../data/fakeScams';
 
 const Home = () => {
     const [reports, setReports] = useState([]);
@@ -15,7 +16,7 @@ const Home = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
+    
     const categories = ['All', 'OTP Scam', 'UPI Fraud', 'Phishing', 'Fake Job', 'Other'];
 
     // Debounce search input
@@ -32,17 +33,120 @@ const Home = () => {
     const fetchReports = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get('http://localhost:5000/api/reports', {
+            // 1. Fetch from Our Database API
+            const { data } = await axios.get('/api/scams', {
                 params: {
                     search: debouncedSearch,
-                    type: typeFilter,
+                    type: typeFilter !== 'All' ? typeFilter : undefined,
                     sort: sortOption,
                     page,
                     limit: 9
                 }
             });
-            setReports(data.reports);
-            setTotalPages(data.totalPages);
+
+            const dbReports = data.reports;
+
+            // 2. Fetch Phishing API (OpenPhish)
+            let apiScams = [];
+            try {
+                if (typeFilter === 'All' || typeFilter === 'Phishing') {
+                    const phishingRes = await axios.get('https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt');
+                    const urls = phishingRes.data.split('\n').filter(url => url.trim() !== '').slice(0, 10); // Take top 10 for performance
+                    
+                    apiScams = urls.map((url, index) => ({
+                        _id: `phish_${index}`,
+                        identifier: url.length > 50 ? url.substring(0, 47) + '...' : url,
+                        scamType: 'Phishing',
+                        description: `Reported malicious phishing URL. Do not visit or click links from this domain.`,
+                        createdAt: new Date().toISOString(),
+                        reportedBy: { name: 'OpenPhish Feed' }
+                    }));
+                }
+            } catch (err) {
+                console.error('Failed to fetch phishing feed', err);
+            }
+
+            // 2b. Fetch Fake Jobs API
+            let fakeJobsApiScams = [];
+            try {
+                if (typeFilter === 'All' || typeFilter === 'Fake Job') {
+                    const jobsRes = await axios.get('https://fakejobs-api.vercel.app/jobs');
+                    // Take top 5 to mix into feed
+                    const jobs = jobsRes.data.slice(0, 5);
+                    
+                    fakeJobsApiScams = jobs.map((job) => ({
+                        _id: `fakejob_${job.id}`,
+                        identifier: job.company?.contactEmail || job.company?.contactPhone || 'Unknown Recruiter',
+                        scamType: 'Fake Job',
+                        description: `Role: ${job.title} at ${job.company?.name}\nSalary: ${job.salary}\nDesc: ${job.description}\n\nWarning: Asking for upfront registration fee before interview.`,
+                        createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(), // Random past date
+                        reportedBy: { name: 'Recruitment Watch' }
+                    }));
+                }
+            } catch (err) {
+                console.error('Failed to fetch fake jobs api', err);
+            }
+
+            // 3. Filter local Fake Scams based on typeFilter and search
+            // (Remove Fake Job static data since we use API now, if typeFilter is Fake Job, only show from API)
+            let filteredFakeScams = fakeScams.filter(scam => scam.scamType !== 'Fake Job'); 
+            
+            if (typeFilter !== 'All') {
+                filteredFakeScams = filteredFakeScams.filter(scam => scam.scamType === typeFilter);
+            }
+            if (debouncedSearch) {
+                const searchLower = debouncedSearch.toLowerCase();
+                filteredFakeScams = filteredFakeScams.filter(scam => 
+                    scam.identifier.toLowerCase().includes(searchLower) ||
+                    scam.description.toLowerCase().includes(searchLower)
+                );
+                apiScams = apiScams.filter(scam => 
+                    scam.identifier.toLowerCase().includes(searchLower)
+                );
+                fakeJobsApiScams = fakeJobsApiScams.filter(scam => 
+                    scam.identifier.toLowerCase().includes(searchLower) ||
+                    scam.description.toLowerCase().includes(searchLower)
+                );
+            }
+
+            // 4. Inject auto-warning for suspicious mobile numbers (starting with 1, 2, 3, or 4)
+            let autoWarningScam = [];
+            if (debouncedSearch) {
+                // Remove spaces/hyphens for checking
+                const cleanSearch = debouncedSearch.replace(/[\s-]/g, '');
+                // Check if it's a 10-digit number starting with 1, 2, 3, or 4
+                if (/^[1-4]\d{9}$/.test(cleanSearch) || /^\+91[1-4]\d{9}$/.test(cleanSearch)) {
+                    autoWarningScam.push({
+                        _id: `auto_warning_${cleanSearch}`,
+                        identifier: debouncedSearch,
+                        scamType: 'OTP Scam',
+                        description: `⚠️ HIGH RISK: Indian mobile numbers do NOT start with 1, 2, 3, or 4. This is highly likely a virtual VoIP number used by international scammers. Do NOT answer or share OTPs.`,
+                        createdAt: new Date().toISOString(),
+                        reportedBy: { name: 'System Auto-Detect' },
+                        confirmations: 99
+                    });
+                }
+            }
+
+            // Combine everything: Auto Warning -> DB -> Phishing API -> Fake Jobs API -> Local Fake Data
+            const allScams = [...autoWarningScam, ...dbReports, ...apiScams, ...fakeJobsApiScams, ...filteredFakeScams];
+
+            // Manual sorting since we merged arrays
+            if (sortOption === 'oldest') {
+                allScams.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            } else {
+                allScams.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+
+            // Client-side pagination for combined results
+            const startIndex = (page - 1) * 9;
+            const endIndex = startIndex + 9;
+
+            setReports(allScams.slice(startIndex, endIndex));
+            // Calculate total pages based on combined length. Fallback to API total pages if DB has more data.
+            const totalCombinedPages = Math.ceil(allScams.length / 9);
+            setTotalPages(Math.max(data.totalPages, totalCombinedPages));
+
         } catch (error) {
             console.error('Failed to fetch reports', error);
         } finally {
@@ -136,7 +240,7 @@ const Home = () => {
                             <div key={i} className="h-64 glass-card animate-pulse bg-slate-200/50 dark:bg-slate-800/50 rounded-3xl"></div>
                         ))}
                     </div>
-                ) : reports.length === 0 ? (
+                ) : reports.length === 0 && (searchTerm || typeFilter !== 'All') ? (
                     <div className="text-center py-24 bg-white/40 dark:bg-slate-900/40 rounded-[2.5rem] border-2 border-slate-200 dark:border-slate-800 border-dashed backdrop-blur-sm">
                         <div className="bg-slate-100 dark:bg-slate-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                             <ShieldAlert className="w-10 h-10 text-slate-400 dark:text-slate-500" />
@@ -145,7 +249,7 @@ const Home = () => {
                         <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-8">
                             We couldn't find any scam reports matching your criteria. Either the search entity is safe, or it hasn't been reported yet.
                         </p>
-                        <Link to="/report" className="btn-primary">
+                        <Link to="/report-scam" className="btn-primary">
                             Report it yourself
                         </Link>
                     </div>
@@ -153,9 +257,9 @@ const Home = () => {
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {reports.map((report) => (
-                                <Link key={report._id} to={`/scams/${encodeURIComponent(report.entity)}`} className="block focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-3xl">
+                                <div key={report._id} className="block">
                                     <ScamCard report={report} />
-                                </Link>
+                                </div>
                             ))}
                         </div>
 
