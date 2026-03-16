@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Shield, Moon, Sun, User as UserIcon, LogOut, Menu, X, PlusCircle } from 'lucide-react';
+import { Shield, User as UserIcon, LogOut, Menu, X, PlusCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
-    const { isDarkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -50,23 +49,18 @@ const Navbar = () => {
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center gap-2">
                         <NavLink to="/">Home</NavLink>
+                        <NavLink to="/analytics">Analytics</NavLink>
 
                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
 
-                        <button
-                            onClick={toggleTheme}
-                            className="btn-ghost !p-2 rounded-full"
-                            aria-label="Toggle Theme"
-                        >
-                            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                        </button>
+                        <ThemeToggle />
 
                         {user ? (
                             <div className="flex items-center gap-2 ml-2">
                                 <NavLink to="/dashboard">
                                     <span className="flex items-center gap-2"><UserIcon className="w-4 h-4" /> Dashboard</span>
                                 </NavLink>
-                                <NavLink to="/report" primary={true}>
+                                <NavLink to="/report-scam" primary={true}>
                                     <span className="flex items-center gap-2"><PlusCircle className="w-4 h-4" /> Report Scam</span>
                                 </NavLink>
                                 <button
@@ -87,12 +81,7 @@ const Navbar = () => {
 
                     {/* Mobile Menu Toggle */}
                     <div className="flex items-center gap-2 md:hidden">
-                        <button
-                            onClick={toggleTheme}
-                            className="btn-ghost !p-2 rounded-full"
-                        >
-                            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                        </button>
+                        <ThemeToggle />
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             className="btn-ghost !p-2 rounded-xl"
@@ -111,6 +100,7 @@ const Navbar = () => {
       `}>
                 <div className="p-4 flex flex-col gap-2">
                     <NavLink to="/">Home</NavLink>
+                    <NavLink to="/analytics">Analytics</NavLink>
 
                     {user ? (
                         <>
@@ -118,7 +108,7 @@ const Navbar = () => {
                             <NavLink to="/dashboard">
                                 <span className="flex items-center gap-2"><UserIcon className="w-4 h-4" /> Dashboard</span>
                             </NavLink>
-                            <NavLink to="/report" primary={true}>
+                            <NavLink to="/report-scam" primary={true}>
                                 <span className="flex justify-center flex-1 items-center gap-2"><PlusCircle className="w-4 h-4" /> Report Scam</span>
                             </NavLink>
                             <button

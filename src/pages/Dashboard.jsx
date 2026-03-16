@@ -1,35 +1,46 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Pencil, Trash2, Plus, ShieldAlert, Search, Activity, FileText } from 'lucide-react';
+import { Pencil, Trash2, Plus, ShieldAlert, Search, Activity, FileText, AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
     const { user, token } = useAuth();
     const [reports, setReports] = useState([]);
+    const [globalStats, setGlobalStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const fetchUserReports = async () => {
+    const [isAdminView, setIsAdminView] = useState(false);
+    const [allReports, setAllReports] = useState([]);
+
+    const fetchDashboardData = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/reports?limit=1000');
-            const userReports = data.reports.filter(r => r.reporter?._id === user.id);
+            const [reportsRes, statsRes] = await Promise.all([
+                axios.get('/api/scams'),
+                axios.get('/api/scams/stats')
+            ]);
+            
+            // Current user's reports
+            const userReports = reportsRes.data.reports.filter(r => r.reportedBy?._id === user?.id);
             setReports(userReports);
+            setAllReports(reportsRes.data.reports); // Store all for admin
+            setGlobalStats(statsRes.data);
         } catch (error) {
-            console.error('Failed to fetch user reports', error);
+            console.error('Failed to fetch dashboard data', error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchUserReports();
+        if (user) fetchDashboardData();
     }, [user]);
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this report?')) return;
         try {
-            await axios.delete(`http://localhost:5000/api/reports/${id}`, {
+            await axios.delete(`/api/scams/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setReports(reports.filter(r => r._id !== id));
@@ -50,7 +61,7 @@ const Dashboard = () => {
     const handleEditSave = async (id) => {
         setIsSaving(true);
         try {
-            const { data } = await axios.put(`http://localhost:5000/api/reports/${id}`,
+            const { data } = await axios.put(`/api/scams/${id}`,
                 { description: editDesc },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -64,26 +75,37 @@ const Dashboard = () => {
     };
 
     const filteredReports = useMemo(() => {
-        return reports.filter(r =>
-            r.entity.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.description.toLowerCase().includes(searchTerm.toLowerCase())
+        const source = isAdminView ? allReports : reports;
+        return source.filter(r =>
+            r.identifier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.scamType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.description?.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [reports, searchTerm]);
+    }, [reports, allReports, searchTerm, isAdminView]);
 
     return (
         <div className="max-w-5xl mx-auto mt-8 animate-in fade-in duration-500 pb-12">
 
-            {/* Dashboard Header Layout */}
+            {/* Dashboard Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Your Dashboard</h1>
+                    <h1 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Your Dashboard {isAdminView && <span className="text-primary-500 text-lg">(Admin Mode)</span>}</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Manage all the scams you've reported.</p>
                 </div>
-                <Link to="/report" className="btn-primary gap-2 w-full md:w-auto shadow-md">
-                    <Plus className="w-5 h-5" />
-                    Report New Scam
-                </Link>
+                <div className="flex gap-4 w-full md:w-auto">
+                    {user?.role === 'admin' && (
+                        <button 
+                            onClick={() => setIsAdminView(!isAdminView)} 
+                            className={`btn-secondary gap-2 shadow-sm ${isAdminView ? 'bg-primary-50 border-primary-200 text-primary-600' : ''}`}
+                        >
+                            {isAdminView ? 'Back to My Reports' : 'Admin Panel: View All'}
+                        </button>
+                    )}
+                    <Link to="/report-scam" className="btn-primary gap-2 flex-1 md:flex-none shadow-md">
+                        <Plus className="w-5 h-5" />
+                        Report New Scam
+                    </Link>
+                </div>
             </div>
 
             {loading ? (
@@ -99,7 +121,7 @@ const Dashboard = () => {
                     <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
                         Help keep the community safe by reporting suspicious phone numbers, UPI IDs, or malicious links.
                     </p>
-                    <Link to="/report" className="btn-primary inline-flex gap-2">
+                    <Link to="/report-scam" className="btn-primary inline-flex gap-2">
                         <Plus className="w-5 h-5" />
                         Report a Scam
                     </Link>
@@ -108,18 +130,57 @@ const Dashboard = () => {
                 <div className="space-y-8">
 
                     {/* Stats Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="glass-card p-6 flex items-center gap-4 border-l-4 border-l-primary-500">
-                            <div className="p-4 bg-primary-100 dark:bg-primary-900/30 rounded-2xl">
-                                <FileText className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Reports</p>
-                                <h4 className="text-3xl font-black text-slate-900 dark:text-white">{reports.length}</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="glass-card p-6 flex flex-col justify-center gap-4 border-l-4 border-l-primary-500">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-2xl shrink-0">
+                                    <FileText className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Platform Reports</p>
+                                    <h4 className="text-3xl font-black text-slate-900 dark:text-white">{globalStats?.totalReports || 0}</h4>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="glass-card p-6 flex items-center gap-4 col-span-1 md:col-span-2">
+                        <div className="glass-card p-6 flex flex-col justify-center gap-4 border-l-4 border-l-danger-500">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-danger-100 dark:bg-danger-900/30 rounded-2xl shrink-0">
+                                    <AlertTriangle className="w-6 h-6 text-danger-600 dark:text-danger-400" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">High Risk</p>
+                                    <h4 className="text-3xl font-black text-slate-900 dark:text-white">{globalStats?.highRisk || 0}</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="glass-card p-6 flex flex-col justify-center gap-4 border-l-4 border-l-orange-500">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-2xl shrink-0">
+                                    <AlertCircle className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Medium Risk</p>
+                                    <h4 className="text-3xl font-black text-slate-900 dark:text-white">{globalStats?.mediumRisk || 0}</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="glass-card p-6 flex flex-col justify-center gap-4 border-l-4 border-l-slate-400">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl shrink-0">
+                                    <Info className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Low Risk</p>
+                                    <h4 className="text-3xl font-black text-slate-900 dark:text-white">{globalStats?.lowRisk || 0}</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Search Bar - Full Width below stats */}
+                        <div className="glass-card p-6 flex items-center gap-4 col-span-1 sm:col-span-2 lg:col-span-4">
                             <div className="w-full relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <Search className="h-5 w-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
@@ -143,7 +204,7 @@ const Dashboard = () => {
 
                         {filteredReports.length === 0 ? (
                             <p className="text-slate-500 italic py-8 text-center bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800">
-                                No reports match your quick search.
+                                No reports match your search.
                             </p>
                         ) : (
                             filteredReports.map((report) => (
@@ -155,9 +216,9 @@ const Dashboard = () => {
                                     <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4 pl-4 border-b border-slate-100 dark:border-slate-800/60 pb-4">
                                         <div>
                                             <h4 className="font-black text-xl text-slate-900 dark:text-white flex items-center gap-3">
-                                                {report.entity}
+                                                {report.identifier}
                                                 <span className="text-xs font-bold px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-600 dark:text-slate-300 tracking-wide uppercase shadow-sm">
-                                                    {report.type}
+                                                    {report.scamType}
                                                 </span>
                                             </h4>
                                             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium">

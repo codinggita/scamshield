@@ -3,7 +3,7 @@ import ScamReport from '../models/ScamReport.js';
 // POST - Create a new scam report (protected)
 export const createScamReport = async (req, res) => {
     try {
-        const { identifier, scamType, description } = req.body;
+        const { identifier, scamType, description, location } = req.body;
         
         if (!identifier || !scamType || !description) {
             return res.status(400).json({ message: 'All fields are required' });
@@ -18,7 +18,8 @@ export const createScamReport = async (req, res) => {
             identifier,
             scamType,
             description,
-            reportedBy: req.user.id
+            reportedBy: req.user.id,
+            location: location || { city: 'Unknown' }
         });
 
         res.status(201).json({ message: 'Scam report submitted successfully', report: newReport });
@@ -98,7 +99,8 @@ export const deleteScamReport = async (req, res) => {
         const report = await ScamReport.findById(req.params.id);
         if (!report) return res.status(404).json({ message: 'Report not found' });
 
-        if (report.reportedBy.toString() !== req.user.id) {
+        // Admin can delete any report, user can only delete theirs
+        if (report.reportedBy.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Not authorized to delete this report' });
         }
 
@@ -211,12 +213,26 @@ export const getScamAnalytics = async (req, res) => {
             });
         }
 
+        // Location Heatmap Data
+        const locationStats = await ScamReport.aggregate([
+            {
+                $group: {
+                    _id: '$location.city',
+                    count: { $sum: 1 },
+                    lat: { $first: '$location.lat' },
+                    lng: { $first: '$location.lng' }
+                }
+            },
+            { $project: { city: '$_id', count: 1, lat: 1, lng: 1, _id: 0 } }
+        ]);
+
         res.status(200).json({
             totalReports,
             reportsToday,
             reportsThisWeek,
             scamTypes,
-            dailyReports
+            dailyReports,
+            locationStats: locationStats.filter(l => l.city !== 'Unknown')
         });
     } catch (error) {
         console.error('Error fetching analytics:', error);
