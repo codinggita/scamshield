@@ -30,7 +30,10 @@ app.use('/api/', limiter);
 
 // CORS Configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: function(origin, callback) {
+    // allow all origins but reflect the actual origin instead of '*' to support withCredentials
+    callback(null, true);
+  },
   credentials: true
 }));
 
