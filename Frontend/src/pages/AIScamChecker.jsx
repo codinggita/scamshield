@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { AlertCircle, CheckCircle, HelpCircle, Loader2, History, ExternalLink, Search } from 'lucide-react';
 
 const AIScamChecker = () => {
@@ -9,15 +9,13 @@ const AIScamChecker = () => {
     const [error, setError] = useState('');
     const [history, setHistory] = useState([]);
 
-    const API_URL = '/api';
-
     useEffect(() => {
         fetchHistory();
     }, []);
 
     const fetchHistory = async () => {
         try {
-            const response = await axios.get(`${API_URL}/ai/history`);
+            const response = await api.get('/ai/history');
             setHistory(response.data);
         } catch (err) {
             console.error('Failed to fetch history:', err);
@@ -36,8 +34,8 @@ const AIScamChecker = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post(
-                `${API_URL}/ai/detect-scam`,
+            const response = await api.post(
+                '/ai/detect-scam',
                 { text: input },
                 {
                     headers: token ? { Authorization: `Bearer ${token}` } : {}

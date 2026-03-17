@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
@@ -12,7 +12,7 @@ const Analytics = () => {
 
     const fetchAnalytics = async () => {
         try {
-            const { data } = await axios.get('/api/scams/analytics');
+            const { data } = await api.get('/scams/analytics');
             setData(data);
         } catch (error) {
             console.error('Failed to fetch analytics', error);

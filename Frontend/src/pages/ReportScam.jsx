@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/axios';
 import { ShieldAlert, Send, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 
 
@@ -56,7 +56,7 @@ const ReportScam = () => {
         }
       };
 
-      await axios.post('/api/scams', payload, {
+      await api.post('/scams', payload, {
         headers: {
           Authorization: `Bearer ${token}`
         }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { Pencil, Trash2, Plus, ShieldAlert, Search, Activity, FileText, AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -17,8 +17,8 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
         try {
             const [reportsRes, statsRes] = await Promise.all([
-                axios.get('/api/scams'),
-                axios.get('/api/scams/stats')
+                api.get('/scams'),
+                api.get('/scams/stats')
             ]);
             
             // Current user's reports
@@ -40,7 +40,7 @@ const Dashboard = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this report?')) return;
         try {
-            await axios.delete(`/api/scams/${id}`, {
+            await api.delete(`/scams/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setReports(reports.filter(r => r._id !== id));
@@ -61,7 +61,7 @@ const Dashboard = () => {
     const handleEditSave = async (id) => {
         setIsSaving(true);
         try {
-            const { data } = await axios.put(`/api/scams/${id}`,
+            const { data } = await api.put(`/scams/${id}`,
                 { description: editDesc },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
