@@ -28,13 +28,17 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// CORS Configuration
+// CORS Configuration (deploy-friendly)
+// Set CORS_ORIGIN as comma-separated list (e.g. "https://app.com,https://www.app.com").
+// If not set, allow requests from any origin (no cookies/credentials required by this app).
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: function(origin, callback) {
-    // allow all origins but reflect the actual origin instead of '*' to support withCredentials
-    callback(null, true);
-  },
-  credentials: true
+  origin: allowedOrigins.length ? allowedOrigins : true,
+  credentials: false,
 }));
 
 app.use(express.json({ limit: '10kb' })); // Body parser with limit to prevent large payload attacks
