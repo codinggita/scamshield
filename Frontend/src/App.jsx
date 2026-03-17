@@ -7,6 +7,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import ReportScam from './pages/ReportScam';
 import Analytics from './pages/Analytics';
+import AIScamChecker from './pages/AIScamChecker';
 import { useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
@@ -28,6 +29,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/ai-scam-checker" element={<AIScamChecker />} />
 
             {/* Protected Routes */}
             <Route

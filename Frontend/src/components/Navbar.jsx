@@ -50,6 +50,7 @@ const Navbar = () => {
                     <div className="hidden md:flex items-center gap-2">
                         <NavLink to="/">Home</NavLink>
                         <NavLink to="/analytics">Analytics</NavLink>
+                        <NavLink to="/ai-scam-checker">AI Scam Finder</NavLink>
 
                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
 
@@ -101,6 +102,7 @@ const Navbar = () => {
                 <div className="p-4 flex flex-col gap-2">
                     <NavLink to="/">Home</NavLink>
                     <NavLink to="/analytics">Analytics</NavLink>
+                    <NavLink to="/ai-scam-checker">AI Scam Finder</NavLink>
 
                     {user ? (
                         <>

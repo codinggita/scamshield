@@ -2,12 +2,12 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+dotenv.config();
 
 import authRoutes from './routes/authRoutes.js';
 import scamRoutes from './routes/scamRoutes.js';
 import ipCheckRoutes from './routes/ipCheckRoutes.js';
-
-dotenv.config();
+import aiRoutes from './routes/aiRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +20,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/scams', scamRoutes);
 app.use('/api/check-ip', ipCheckRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Database connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scamshield';
