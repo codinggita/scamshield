@@ -21,8 +21,8 @@ export const detectScam = async (req, res) => {
         }
 
         const genAI = new GoogleGenerativeAI(key);
-        // Switching to gemini-pro for maximum compatibility
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        // Switching to gemini-2.5-flash (latest available) and explicitly setting API version to v1 to avoid v1beta issues
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }, { apiVersion: "v1" });
 
         const prompt = `
             Act as a cybersecurity expert. Analyze the following message and determine if it is a SCAM, SUSPICIOUS, or SAFE.
@@ -82,7 +82,8 @@ export const detectScam = async (req, res) => {
             message: errorMessage,
             label: "SUSPICIOUS",
             confidence: 0,
-            reason: `AI Analysis Failed: ${error.message}. Please check your API key and connection.`
+            reason: `AI Analysis Failed: ${error.message}. Please check your API key and connection.`,
+            error_details: error
         });
     }
 };
