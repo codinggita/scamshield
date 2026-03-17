@@ -13,22 +13,28 @@ ScamShield is a full-stack web application that detects potential scams using AI
 
 
 ## 📸 Screenshots  
+## 📸 Screenshots  
 
-<p align="center">
-  <b>🏠 Home Page</b><br/>
-  <img src="https://res.cloudinary.com/doxsyif22/image/upload/v1773767801/Screenshot_2026-03-17_224017_xw8uev.png" width="90%" />
-</p>
+<table align="center">
+<tr>
+<td align="center" width="50%">
+<b>🏠 Home Page</b><br/>
+<img src="https://res.cloudinary.com/doxsyif22/image/upload/v1773767801/Screenshot_2026-03-17_224017_xw8uev.png" />
+</td>
 
-<p align="center">
-  <b>📊 Analytics Dashboard</b><br/>
-  <img src="https://res.cloudinary.com/doxsyif22/image/upload/v1773767801/Screenshot_2026-03-17_224110_rdaz8n.png" width="90%" />
-</p>
+<td align="center" width="50%">
+<b>📊 Analytics Dashboard</b><br/>
+<img src="https://res.cloudinary.com/doxsyif22/image/upload/v1773767801/Screenshot_2026-03-17_224110_rdaz8n.png" />
+</td>
+</tr>
 
-<p align="center">
-  <b>🤖 AI Scam Finder</b><br/>
-  <img src="https://res.cloudinary.com/doxsyif22/image/upload/v1773767803/Screenshot_2026-03-17_224029_iulrx8.png" width="90%" />
-  
-</p>
+<tr>
+<td align="center" colspan="2">
+<b>🤖 AI Scam Finder</b><br/>
+<img src="https://res.cloudinary.com/doxsyif22/image/upload/v1773767803/Screenshot_2026-03-17_224029_iulrx8.png" width="70%"/>
+</td>
+</tr>
+</table>
 ---
 
 ## 🧠 Features
