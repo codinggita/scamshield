@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { ShieldAlert, AlertTriangle, ThumbsUp } from 'lucide-react';
 
 const ScamCard = ({ report }) => {
@@ -23,7 +23,7 @@ const ScamCard = ({ report }) => {
 
         setIsConfirming(true);
         try {
-            const { data } = await axios.post(`/api/scams/${report._id}/confirm`);
+            const { data } = await api.post(`/scams/${report._id}/confirm`);
             setConfirmations(data.confirmations);
             setHasConfirmed(true);
         } catch (error) {

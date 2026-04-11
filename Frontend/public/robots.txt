@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://scamshield-xjip.vercel.app//sitemap.xml

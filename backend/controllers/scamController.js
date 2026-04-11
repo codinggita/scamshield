@@ -5,27 +5,32 @@ export const createScamReport = async (req, res) => {
     try {
         const { identifier, scamType, description, location } = req.body;
         
+        // Stricter Validation
         if (!identifier || !scamType || !description) {
-            return res.status(400).json({ message: 'All fields are required' });
+            return res.status(400).json({ message: 'Please provide identifier, scam type, and description' });
         }
         
         const validScamTypes = ['OTP Scam', 'UPI Fraud', 'Phishing', 'Fake Job', 'Other'];
         if (!validScamTypes.includes(scamType)) {
-            return res.status(400).json({ message: 'Invalid scam type' });
+            return res.status(400).json({ message: 'Invalid scam category' });
         }
 
         const newReport = await ScamReport.create({
-            identifier,
+            identifier: identifier.trim().substring(0, 100),
             scamType,
-            description,
+            description: description.trim().substring(0, 1000),
             reportedBy: req.user.id,
-            location: location || { city: 'Unknown' }
+            location: {
+                city: location?.city?.substring(0, 50) || 'Unknown',
+                lat: typeof location?.lat === 'number' ? location.lat : undefined,
+                lng: typeof location?.lng === 'number' ? location.lng : undefined
+            }
         });
 
-        res.status(201).json({ message: 'Scam report submitted successfully', report: newReport });
+        res.status(201).json({ message: 'Report submitted successfully', report: newReport });
     } catch (error) {
-        console.error('Error creating scam report:', error);
-        res.status(500).json({ message: 'Server Error. Please try again later.' });
+        console.error('Scam Creation Error:', error);
+        res.status(500).json({ message: 'Request failed. Please try again later.' });
     }
 };
 

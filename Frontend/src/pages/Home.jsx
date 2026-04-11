@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import ScamCard from '../components/ScamCard';
 import Pagination from '../components/Pagination';
 import { Search, Filter, ShieldAlert, Loader2 } from 'lucide-react';
@@ -16,7 +16,7 @@ const Home = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    
+
     const categories = ['All', 'OTP Scam', 'UPI Fraud', 'Phishing', 'Fake Job', 'Other'];
 
     // Debounce search input
@@ -34,7 +34,7 @@ const Home = () => {
         setLoading(true);
         try {
             // 1. Fetch from Our Database API
-            const { data } = await axios.get('/api/scams', {
+            const { data } = await api.get('/scams', {
                 params: {
                     search: debouncedSearch,
                     type: typeFilter !== 'All' ? typeFilter : undefined,
@@ -50,9 +50,12 @@ const Home = () => {
             let apiScams = [];
             try {
                 if (typeFilter === 'All' || typeFilter === 'Phishing') {
-                    const phishingRes = await axios.get('https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt');
-                    const urls = phishingRes.data.split('\n').filter(url => url.trim() !== '').slice(0, 10); // Take top 10 for performance
-                    
+                    // Note: This is an external API call, but we leave it with axios or api? 
+                    // Wait, `api.get` will prepend baseURL. Let's use native fetch for external to avoid baseURL issues.
+                    const phishingRes = await fetch('https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt');
+                    const textData = await phishingRes.text();
+                    const urls = textData.split('\n').filter(url => url.trim() !== '').slice(0, 10); // Take top 10 for performance
+
                     apiScams = urls.map((url, index) => ({
                         _id: `phish_${index}`,
                         identifier: url.length > 50 ? url.substring(0, 47) + '...' : url,
@@ -70,10 +73,11 @@ const Home = () => {
             let fakeJobsApiScams = [];
             try {
                 if (typeFilter === 'All' || typeFilter === 'Fake Job') {
-                    const jobsRes = await axios.get('https://fakejobs-api.vercel.app/jobs');
+                    const jobsRes = await fetch('https://fakejobs-api.vercel.app/jobs');
+                    const jobsData = await jobsRes.json();
                     // Take top 5 to mix into feed
-                    const jobs = jobsRes.data.slice(0, 5);
-                    
+                    const jobs = jobsData.slice(0, 5);
+
                     fakeJobsApiScams = jobs.map((job) => ({
                         _id: `fakejob_${job.id}`,
                         identifier: job.company?.contactEmail || job.company?.contactPhone || 'Unknown Recruiter',
@@ -89,21 +93,21 @@ const Home = () => {
 
             // 3. Filter local Fake Scams based on typeFilter and search
             // (Remove Fake Job static data since we use API now, if typeFilter is Fake Job, only show from API)
-            let filteredFakeScams = fakeScams.filter(scam => scam.scamType !== 'Fake Job'); 
-            
+            let filteredFakeScams = fakeScams.filter(scam => scam.scamType !== 'Fake Job');
+
             if (typeFilter !== 'All') {
                 filteredFakeScams = filteredFakeScams.filter(scam => scam.scamType === typeFilter);
             }
             if (debouncedSearch) {
                 const searchLower = debouncedSearch.toLowerCase();
-                filteredFakeScams = filteredFakeScams.filter(scam => 
+                filteredFakeScams = filteredFakeScams.filter(scam =>
                     scam.identifier.toLowerCase().includes(searchLower) ||
                     scam.description.toLowerCase().includes(searchLower)
                 );
-                apiScams = apiScams.filter(scam => 
+                apiScams = apiScams.filter(scam =>
                     scam.identifier.toLowerCase().includes(searchLower)
                 );
-                fakeJobsApiScams = fakeJobsApiScams.filter(scam => 
+                fakeJobsApiScams = fakeJobsApiScams.filter(scam =>
                     scam.identifier.toLowerCase().includes(searchLower) ||
                     scam.description.toLowerCase().includes(searchLower)
                 );

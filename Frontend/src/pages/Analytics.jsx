@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { 
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-    PieChart, Pie, Cell, Legend 
+import api from '../api/axios';
+import { Helmet } from "react-helmet";
+
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { TrendingUp, PieChart as PieIcon, ShieldCheck, Calendar, Activity, Loader2 } from 'lucide-react';
 
@@ -12,7 +14,7 @@ const Analytics = () => {
 
     const fetchAnalytics = async () => {
         try {
-            const { data } = await axios.get('/api/scams/analytics');
+            const { data } = await api.get('/scams/analytics');
             setData(data);
         } catch (error) {
             console.error('Failed to fetch analytics', error);
@@ -40,6 +42,15 @@ const Analytics = () => {
 
     return (
         <div className="space-y-10 pb-12 animate-in fade-in duration-700">
+
+            <Helmet>
+                <title>Scam Analytics</title>
+                <meta
+                    name="description"
+                    content="scam Analytics"
+                />
+            </Helmet>
+
             {/* Header */}
             <div>
                 <h1 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Scam Analytics</h1>
@@ -81,7 +92,7 @@ const Analytics = () => {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
+
                 {/* Line Chart - Daily Reports */}
                 <div className="glass-card p-8 flex flex-col h-[450px]">
                     <div className="flex items-center gap-3 mb-8">
@@ -92,31 +103,31 @@ const Analytics = () => {
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={data.dailyReports}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis 
-                                    dataKey="displayDate" 
-                                    axisLine={false} 
-                                    tickLine={false} 
-                                    tick={{fontSize: 12, fill: '#64748b'}}
+                                <XAxis
+                                    dataKey="displayDate"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 12, fill: '#64748b' }}
                                     dy={10}
                                 />
-                                <YAxis 
-                                    axisLine={false} 
-                                    tickLine={false} 
-                                    tick={{fontSize: 12, fill: '#64748b'}}
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 12, fill: '#64748b' }}
                                 />
-                                <Tooltip 
-                                    contentStyle={{ 
-                                        borderRadius: '16px', 
-                                        border: 'none', 
+                                <Tooltip
+                                    contentStyle={{
+                                        borderRadius: '16px',
+                                        border: 'none',
                                         boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.95)' 
+                                        backgroundColor: 'rgba(255, 255, 255, 0.95)'
                                     }}
                                 />
-                                <Line 
-                                    type="monotone" 
-                                    dataKey="count" 
-                                    stroke="#6366f1" 
-                                    strokeWidth={4} 
+                                <Line
+                                    type="monotone"
+                                    dataKey="count"
+                                    stroke="#6366f1"
+                                    strokeWidth={4}
                                     dot={{ r: 6, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }}
                                     activeDot={{ r: 8, strokeWidth: 0 }}
                                 />
@@ -148,16 +159,16 @@ const Analytics = () => {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip 
-                                    contentStyle={{ 
-                                        borderRadius: '16px', 
-                                        border: 'none', 
-                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' 
+                                <Tooltip
+                                    contentStyle={{
+                                        borderRadius: '16px',
+                                        border: 'none',
+                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                                     }}
                                 />
-                                <Legend 
-                                    verticalAlign="bottom" 
-                                    height={36} 
+                                <Legend
+                                    verticalAlign="bottom"
+                                    height={36}
                                     iconType="circle"
                                     formatter={(value) => <span className="text-slate-600 dark:text-slate-400 font-medium text-sm">{value}</span>}
                                 />
@@ -173,7 +184,7 @@ const Analytics = () => {
                     <Activity className="w-6 h-6 text-danger-500" />
                     <h3 className="text-xl font-bold text-slate-800 dark:text-white">Scam Location Hotspots (Heatmap)</h3>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     {/* Visual representation of Heatmap (Simplified SVG Map) */}
                     <div className="relative aspect-square max-w-[400px] mx-auto bg-slate-50 dark:bg-slate-800/20 rounded-[3rem] p-8 border border-slate-100 dark:border-slate-800/50 flex items-center justify-center overflow-hidden">
@@ -183,16 +194,16 @@ const Analytics = () => {
                             </svg>
                         </div>
                         {data.locationStats?.map((loc) => (
-                            <div 
+                            <div
                                 key={loc.city}
                                 className="absolute flex flex-col items-center group cursor-pointer"
-                                style={{ 
-                                    left: `${((loc.lng - 68) / (97 - 68)) * 100}%`, 
-                                    top: `${(1 - (loc.lat - 8) / (37 - 8)) * 100}%` 
+                                style={{
+                                    left: `${((loc.lng - 68) / (97 - 68)) * 100}%`,
+                                    top: `${(1 - (loc.lat - 8) / (37 - 8)) * 100}%`
                                 }}
                             >
-                                <div className="w-4 h-4 rounded-full bg-danger-500 animate-pulse shadow-lg shadow-danger-500/50" 
-                                     style={{ transform: `scale(${1 + loc.count * 0.2})` }}></div>
+                                <div className="w-4 h-4 rounded-full bg-danger-500 animate-pulse shadow-lg shadow-danger-500/50"
+                                    style={{ transform: `scale(${1 + loc.count * 0.2})` }}></div>
                                 <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-900 px-2 py-1 rounded-lg text-[10px] font-bold shadow-xl border border-slate-100 dark:border-slate-800 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
                                     {loc.city}: {loc.count} reports
                                 </div>
@@ -203,7 +214,7 @@ const Analytics = () => {
                     {/* Hotspot List */}
                     <div className="space-y-6">
                         <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">Top Affected Regions</h4>
-                        {data.locationStats?.sort((a,b) => b.count - a.count).slice(0, 5).map((loc) => (
+                        {data.locationStats?.sort((a, b) => b.count - a.count).slice(0, 5).map((loc) => (
                             <div key={loc.city} className="space-y-2">
                                 <div className="flex justify-between items-end">
                                     <span className="font-bold text-slate-800 dark:text-white">{loc.city}</span>
@@ -212,7 +223,7 @@ const Analytics = () => {
                                     </span>
                                 </div>
                                 <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div 
+                                    <div
                                         className="h-full bg-gradient-to-r from-orange-400 to-danger-600 rounded-full transition-all duration-1000"
                                         style={{ width: `${(loc.count / (data.totalReports || 1)) * 100}%` }}
                                     ></div>
@@ -232,7 +243,7 @@ const Analytics = () => {
                 <div>
                     <h5 className="font-bold text-primary-900 dark:text-primary-100">Analytics Insights</h5>
                     <p className="text-primary-700 dark:text-primary-300 text-sm mt-1">
-                        Higher report counts in specific categories help us prioritize bank and telecom alerts. 
+                        Higher report counts in specific categories help us prioritize bank and telecom alerts.
                         Live data is updated every time a new report is confirmed by the community.
                     </p>
                 </div>

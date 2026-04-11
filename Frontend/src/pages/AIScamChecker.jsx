@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { AlertCircle, CheckCircle, HelpCircle, Loader2, History, ExternalLink, Search } from 'lucide-react';
+import { Helmet } from "react-helmet";
+
 
 const AIScamChecker = () => {
     const [input, setInput] = useState('');
@@ -9,15 +11,13 @@ const AIScamChecker = () => {
     const [error, setError] = useState('');
     const [history, setHistory] = useState([]);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
     useEffect(() => {
         fetchHistory();
     }, []);
 
     const fetchHistory = async () => {
         try {
-            const response = await axios.get(`${API_URL}/ai/history`);
+            const response = await api.get('/ai/history');
             setHistory(response.data);
         } catch (err) {
             console.error('Failed to fetch history:', err);
@@ -36,8 +36,8 @@ const AIScamChecker = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post(
-                `${API_URL}/ai/detect-scam`,
+            const response = await api.post(
+                '/ai/detect-scam',
                 { text: input },
                 {
                     headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -110,6 +110,17 @@ const AIScamChecker = () => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+
+            <Helmet>
+                <title>Ai-Scam-Finder</title>
+                <meta
+                    name="description"
+                    content="Ai powered scam finder"
+                />
+            </Helmet>
+
+
             <div className="text-center space-y-4">
                 <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white flex items-center justify-center gap-3 tracking-tight">
                     <span className="bg-primary-600 text-white p-2 rounded-2xl shadow-lg shadow-primary-500/30">AI</span> Scam Finder
