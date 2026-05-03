@@ -5,89 +5,85 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const detectScam = async (req, res) => {
-    const { text } = req.body;
-
-    const key = process.env.GEMINI_API_KEY;
-
-    console.log("-----------------------------------------");
-    console.log("🚀 [Server AI] Request Received");
-
-    if (!text || text.trim() === '') {
-        return res.status(400).json({ message: 'Text input is required' });
-    }
-
-    if (!key) {
-        return res.status(500).json({ message: 'Gemini API Key missing' });
-    }
-
     try {
+        const { text } = req.body;
+        const key = process.env.GEMINI_API_KEY;
+
+        console.log("🔍 AI Analysis requested for text length:", text?.length);
+
+        if (!text || typeof text !== 'string' || text.trim().length < 5) {
+            return res.status(400).json({ message: 'Please provide at least 5 characters to analyze.' });
+        }
+
+        if (!key) {
+            console.error("❌ GEMINI_API_KEY is missing!");
+            return res.status(500).json({ message: 'AI API Key missing. Please check backend .env file.' });
+        }
+
         const genAI = new GoogleGenerativeAI(key);
-
-        console.log("🧠 Using model: gemini-1.5-flash-latest");
-
-        const model = genAI.getGenerativeModel({
-            model: "gemini-flash-latest"
-        });
+        // Switching to gemini-2.5-flash (latest available) and explicitly setting API version to v1 to avoid v1beta issues
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }, { apiVersion: "v1" });
 
         const prompt = `
-You are a cybersecurity AI.
-
-Analyze the message and classify it:
-
-SAFE / SUSPICIOUS / SCAM
-
-Return ONLY JSON:
-{
-  "label": "SCAM",
-  "confidence": 90,
-  "reason": "short reason"
-}
-
-Message: "${text}"
-`;
+            Act as a cybersecurity expert. Analyze the following message and determine if it is a SCAM, SUSPICIOUS, or SAFE.
+            
+            Return ONLY a valid JSON object with this exact structure:
+            {"label": "SAFE"|"SUSPICIOUS"|"SCAM", "confidence": number, "reason": "one sentence explanation"}
+            
+            Message to analyze: "${text.substring(0, 2000)}"
+        `;
 
         const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let responseText = response.text();
 
-        const responseText =
-            result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        console.log("🤖 AI Raw Response:", responseText);
 
-        console.log("👉 RAW RESPONSE:", responseText);
+        // Sanitize: remove any markdown backticks if AI included them
+        responseText = responseText.replace(/```json|```/g, "").trim();
 
         let aiResult;
-
         try {
             aiResult = JSON.parse(responseText);
-        } catch {
-            console.log("⚠️ JSON parse failed");
-
-            aiResult = {
-                label: "SUSPICIOUS",
-                confidence: 50,
-                reason: "AI response parsing failed"
+        } catch (e) {
+            console.warn("⚠️ AI JSON Parse Failed. Attempting recovery...");
+            const labelMatch = responseText.match(/SCAM|SUSPICIOUS|SAFE/i);
+            const label = labelMatch ? labelMatch[0].toUpperCase() : "SUSPICIOUS";
+            aiResult = { 
+                label, 
+                confidence: 50, 
+                reason: "Analysis completed but format was slightly off." 
             };
         }
 
-        const newScan = new AIScan({
-            text,
+        const newScan = await AIScan.create({
+            text: text.substring(0, 500),
             label: aiResult.label,
             confidence: aiResult.confidence,
             reason: aiResult.reason,
         });
 
-        await newScan.save();
-
         res.status(200).json({
-            ...aiResult,
+            label: aiResult.label,
+            confidence: aiResult.confidence,
+            reason: aiResult.reason,
             id: newScan._id
         });
 
     } catch (error) {
-        console.error("🔥 FINAL ERROR:", error.message);
+        console.error("❌ AI ERROR DETAILS:", error);
+        
+        let errorMessage = "AI Service Error";
+        if (error.message?.includes("API_KEY_INVALID")) errorMessage = "Invalid Gemini API Key";
+        if (error.message?.includes("quota")) errorMessage = "AI Limit exceeded (Quota)";
 
-        res.status(200).json({
+        // Return 200 even on error so the frontend can show the 'reason' containing the error
+        res.status(200).json({ 
+            message: errorMessage,
             label: "SUSPICIOUS",
-            confidence: 50,
-            reason: "AI temporarily unavailable"
+            confidence: 0,
+            reason: `AI Analysis Failed: ${error.message}. Please check your API key and connection.`,
+            error_details: error
         });
     }
 };

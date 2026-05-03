@@ -1,102 +1,214 @@
-# 🛡️ ScamShield – Community Driven Fraud Detection Platform
+# 🚀 ScamShield – AI Powered Scam Detection Platform
 
-## 📌 Problem Statement
-
-In today’s digital era, online fraud and scam activities are increasing rapidly through phone calls, phishing links, fake job offers, and fraudulent websites. Many individuals fall victim to financial loss and data theft because they do not have a quick and reliable way to verify whether a phone number, website, or payment ID has been previously reported as fraudulent.
-
-Currently, there is no simple and accessible platform where users can instantly check suspicious numbers or links before interacting with them.
-
-ScamShield aims to solve this problem by providing a centralized, community-driven platform where users can verify and report scams, helping others stay protected from digital fraud.
+ScamShield is a full-stack web application that detects potential scams using AI. It analyzes suspicious messages, links, or patterns and helps users stay safe online.
 
 ---
 
-## 💡 Proposed Solution
 
-ScamShield is a full-stack web application that allows users to search suspicious phone numbers, website URLs, or payment IDs to check if they have been reported as scams.
+## 🌐 Live Demo  
 
-The platform maintains a shared database of reported scam activities. Users can also contribute by submitting new scam reports, creating a collaborative system that helps identify and prevent fraudulent activities.
-
-By combining community reporting with efficient search and filtering features, ScamShield helps users make safer online decisions.
-
----
-
-## ⚙️ Key Features
-
-### 🔍 Scam Verification
-Users can search for suspicious phone numbers, URLs, or UPI IDs to check if they have been reported as scams.
-
-### 📝 Community Reporting
-Registered users can report scam numbers or websites with details such as scam type and description.
-
-### 📊 Scam Database
-The platform stores all reported scams in a centralized MongoDB database.
-
-### 🔎 Search with Debouncing
-Search functionality is optimized using debouncing to reduce unnecessary API calls and improve performance.
-
-### 📄 Pagination
-Large datasets of scam reports are handled efficiently using backend pagination.
-
-### 🗂 Filtering & Sorting
-Users can filter reports based on scam categories such as:
-- OTP Scam  
-- UPI Fraud  
-- Phishing Links  
-- Fake Job Offers  
-
-Reports can also be sorted by date or number of reports.
-
-### 🔐 User Authentication
-The application includes a secure authentication system allowing users to:
-- Sign Up  
-- Log In  
-- Report Scams  
-
-### 🎨 Responsive UI
-The frontend is built using React and Tailwind CSS, ensuring a fully responsive design for mobile, tablet, and desktop devices.
-
-### 🌙 Dark / Light Mode
-Users can switch between dark and light themes for a better user experience.
+- 🔗 **Frontend**: https://scamshield-xjip.vercel.app/  
+- 🔗 **Backend API**: https://scamshield-2.onrender.com  
+- 🔗 **API Base**: https://scamshield-2.onrender.com/api  
 
 ---
 
-## 🛠 Tech Stack
+
+
+## 📸 Screenshots  
+
+<table align="center">
+<tr>
+<td align="center" width="50%">
+<b>🏠 Home Page</b><br/>
+<img src="https://res.cloudinary.com/doxsyif22/image/upload/v1773767801/Screenshot_2026-03-17_224017_xw8uev.png" />
+</td>
+
+<td align="center" width="50%">
+<b>📊 Analytics Dashboard</b><br/>
+<img src="https://res.cloudinary.com/doxsyif22/image/upload/v1773767801/Screenshot_2026-03-17_224110_rdaz8n.png" />
+</td>
+</tr>
+
+<tr>
+<td align="center" colspan="2">
+<b>🤖 AI Scam Finder</b><br/>
+<img src="https://res.cloudinary.com/doxsyif22/image/upload/v1773767803/Screenshot_2026-03-17_224029_iulrx8.png" width="70%"/>
+</td>
+</tr>
+</table>
+---
+
+## 🧠 Features
+
+* 🤖 AI-based scam detection
+* 📊 Analytics dashboard
+* ⚡ Real-time API responses
+* 🔒 Secure backend with environment variables
+* 🌐 Full-stack deployment (Vercel + Render)
+
+---
+
+## 🏗️ Tech Stack
 
 ### Frontend
-- React.js  
-- Tailwind CSS  
-- React Router  
+
+* React (Vite)
+* Axios
+* Chart.js / Recharts (Analytics)
 
 ### Backend
-- Node.js  
-- Express.js  
 
-### Database
-- MongoDB  
+* Node.js
+* Express.js
+* CORS
+* Environment Variables
 
----
+### Deployment
 
-## 📊 Database Overview
-
-The platform stores scam reports in a structured database that includes:
-
-- Phone Number / URL / UPI ID  
-- Scam Type  
-- Description  
-- Number of Reports  
-- Reported By (User)
+* Frontend → Vercel
+* Backend → Render
 
 ---
 
-## 🚀 Expected Impact
+## 📁 Project Structure
 
-ScamShield helps users verify suspicious contacts and websites before interacting with them. By enabling community reporting and real-time verification, the platform promotes digital safety and awareness while reducing the risk of online fraud.
+```
+ScamShield/
+│
+├── frontend/
+│   ├── src/
+│   ├── .env
+│   └── vite.config.js
+│
+├── backend/
+│   ├── server.js
+│   ├── routes/
+│   └── .env
+│
+└── README.md
+```
 
 ---
 
-## 🔮 Future Improvements
+## ⚙️ Environment Variables
 
-- Integration with phishing detection APIs  
-- AI-based scam pattern detection  
-- Real-time fraud alerts  
-- Mobile application support  
+### 📌 Frontend (.env)
+
+```
+VITE_API_URL=https://scamshield-1.onrender.com
+```
+
+---
+
+### 📌 Backend (.env)
+
+```
+PORT=10000
+FRONTEND_URL=https://your-frontend-url.vercel.app
+```
+
+---
+
+## 🔧 Installation & Setup
+
+### 1️⃣ Clone the Repository
+
+fork this Repository
+
+```
+git clone https://github.com/your-username/scamshield.git
+cd scamshield
+```
+
+---
+
+### 2️⃣ Backend Setup
+
+```
+cd backend
+npm install
+npm start
+```
+
+---
+
+### 3️⃣ Frontend Setup
+
+```
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## 🔌 API Usage
+
+### Example Request
+
+```
+GET /api/scams
+```
+
+### Axios Example
+
+```
+axios.get(`${import.meta.env.VITE_API_URL}/api/scams`)
+```
+
+---
+
+## 🚀 Deployment Guide
+
+### 🔹 Backend (Render)
+
+* Create new Web Service
+* Connect GitHub repo
+* Build Command:
+
+```
+npm install
+```
+
+* Start Command:
+
+```
+node server.js
+```
+
+---
+
+### 🔹 Frontend (Vercel)
+
+* Import GitHub repo
+* Add Environment Variable:
+
+```
+VITE_API_URL=https://scamshield-1.onrender.com
+```
+
+* Deploy
+
+---
+
+
+
+## 👨‍💻 Author
+
+**Jilan Mansuri**
+
+* 💼 Developer & Student
+* 🚀 Passionate about AI & Web Development
+
+---
+
+## 📜 License
+
+This project is open-source and available under the MIT License.
+
+---
+
+## ⭐ Support
+
+If you like this project, give it a ⭐ on GitHub!

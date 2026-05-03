@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/axios';
 import { ShieldAlert, Send, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { Helmet } from 'react-helmet';
 
 
 const ReportScam = () => {
@@ -56,7 +57,7 @@ const ReportScam = () => {
         }
       };
 
-      await axios.post('/api/scams', payload, {
+      await api.post('/scams', payload, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -78,6 +79,10 @@ const ReportScam = () => {
 
   return (
     <div className="max-w-2xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <Helmet>
+        <title>Report a Scam | Community Protection | ScamShield</title>
+        <meta name="description" content="Help protect your community by reporting phone numbers, URLs, or UPI IDs used for scams and fraud. Your report can save someone from financial loss." />
+      </Helmet>
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden relative">
         
         {/* Decorative Header */}
